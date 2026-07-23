@@ -2,7 +2,7 @@ from mysql.connector import connect
 from config import *
 
 def check_table(level,uid,upwd):
-    my_con=connect(host=HOST,user=USER,passwd=PASSWORD,database="__bop__")
+    my_con=connect(host=HOST,user=USER,passwd=PASSWORD,database="__bop__",port=PORT)
     my_cur=my_con.cursor()
     table_name = f"{level}_details"
     id_col = f"{level}Id"
@@ -22,25 +22,41 @@ def check_table(level,uid,upwd):
 
 
 try:
-    my_con=connect(host=HOST,user=USER,passwd=PASSWORD)
+    my_con=connect(host=HOST,user=USER,passwd=PASSWORD,port=PORT)
     my_cur=my_con.cursor()
     my_cur.execute("CREATE DATABASE IF NOT EXISTS __bop__")
     my_cur.execute("USE __bop__")
-    admin_col="""
-    adminId VARCHAR(30) PRIMARY KEY, adminName VARCHAR(20),adminPwd VARCHAR(30), adminDOB DATETIME, adminDOJ DATETIME
+    admin_col = """
+        adminId VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin PRIMARY KEY, 
+        adminName VARCHAR(50),
+        adminPwd VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL, 
+        adminDOB DATETIME, 
+        adminDOJ DATETIME
     """
-    my_cur.execute(f"CREATE TABLE IF NOT EXISTS admin_details({admin_col})")
+    my_cur.execute(
+        f"CREATE TABLE IF NOT EXISTS admin_details({admin_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    )
 
-    cust_col="""
-    custmerId VARCHAR(30) PRIMARY KEY, customerName VARCHAR(20),customerPwd VARCHAR(30), customerDOB DATETIME
+    cust_col = """
+        customerId VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin PRIMARY KEY, 
+        customerName VARCHAR(50),
+        customerPwd VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL, 
+        customerDOB DATETIME
     """
-    my_cur.execute(f"CREATE TABLE IF NOT EXISTS customer_details({cust_col})")
+    my_cur.execute(
+        f"CREATE TABLE IF NOT EXISTS customer_details({cust_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    )
 
-    trans_col="""
-    transactionId VARCHAR(30) PRIMARY KEY, customerName VARCHAR(20),customerPwd VARCHAR(30), customerDOB DATETIME
+    trans_col = """
+        transactionId VARCHAR(30) PRIMARY KEY, 
+        customerId VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
+        amount DECIMAL(15, 2),
+        transactionType VARCHAR(20),
+        transactionDate DATETIME
     """
-    my_cur.execute(f"CREATE TABLE IF NOT EXISTS customer_details({cust_col})")
-
+    my_cur.execute(
+        f"CREATE TABLE IF NOT EXISTS transaction_details({trans_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+)
 except Exception as e:
     print(e)
 
