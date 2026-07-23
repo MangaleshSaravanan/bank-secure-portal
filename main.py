@@ -171,6 +171,7 @@ class BankApp(CTk):
                 self.custpwd.delete(0, END)
 
                 import customer_menu
+                self.destroy()
                 app = customer_menu.customerMenu()
                 app.mainloop()
             else:
@@ -205,7 +206,7 @@ class BankApp(CTk):
             if token:
                 self.admid.delete(0, END)
                 self.admpwd.delete(0, END)
-
+                self.destroy()
                 import admin_menu
                 app = admin_menu.adminMenu()
                 app.mainloop()
