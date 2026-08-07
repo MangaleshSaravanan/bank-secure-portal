@@ -208,7 +208,7 @@ class BankApp(CTk):
                 self.admpwd.delete(0, END)
                 self.destroy()
                 import admin_menu
-                app = admin_menu.adminMenu()
+                app = admin_menu.adminMenu(token)
                 app.mainloop()
             else:
                 messagebox.showwarning(
