@@ -19,7 +19,19 @@ def check_table(level,uid,upwd):
     if result:
         return True, level
     return False
+def createAccountNumber:
+    acn=None
+    return acn
+def storeCustomer(details):
+    details["DOB"]="-".join(details["DOB"].split("-")[::-1])
 
+    values = list(details.values())
+    acn=createAccountNumber
+    values.insert(0,acn)
+    placeholders = ", ".join(["%s"] * len(values))
+    my_cur.execute(f"INSERT INTO customer_details VALUES ({placeholders})", values)
+    my_con.commit()
+    return acn
 
 try:
     my_con=connect(host=HOST,user=USER,passwd=PASSWORD,port=PORT)
@@ -38,13 +50,26 @@ try:
     )
 
     cust_col = """
-        customerId VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin PRIMARY KEY, 
-        customerName VARCHAR(50),
-        customerPwd VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL, 
-        customerDOB DATETIME
+        `Account Number` VARCHAR(20),
+        `First Name` VARCHAR(50),
+        `Last Name` VARCHAR(50),
+        `DOB` DATE,
+        `Gender` VARCHAR(20),
+        `e-mail` VARCHAR(100),
+        `Phone Number` VARCHAR(15),
+        `PAN Number` VARCHAR(20),
+        `Identity Type` VARCHAR(30),
+        `Identity Number` VARCHAR(50),
+        `Address Line 1` VARCHAR(100),
+        `Address Line 2` VARCHAR(100),
+        `Address Line 3` VARCHAR(100),
+        `District` VARCHAR(50),
+        `State` VARCHAR(50),
+        `Occupation` VARCHAR(50)
     """
+
     my_cur.execute(
-        f"CREATE TABLE IF NOT EXISTS customer_details({cust_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        f"CREATE TABLE IF NOT EXISTS customer_details ({cust_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
     )
 
     trans_col = """
