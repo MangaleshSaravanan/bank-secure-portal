@@ -21,10 +21,12 @@ def admin_entry(usrid,usrpwd):
         )
     return response.json().get("access_token")
 
-def create_account(token):
+def create_account(token,details):
     response = post(
         server+"/create_account",
         json={
-            "token":token
-        })
+            "token":token,
+            "details":details
+            }
+        )
     return response.json().get("account_number")
