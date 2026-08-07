@@ -1,11 +1,16 @@
 from fastapi import FastAPI
 from auth import login
 from pydantic import BaseModel
+from database import *
 app=FastAPI()
 
 class getinput(BaseModel):
     log_id: str
     pwd: str
+
+class CreateAccountRequest(BaseModel):
+    token: str
+    details: dict
 
 @app.post("/login/customer")
 def cust_login(cust_det: getinput):
@@ -18,5 +23,11 @@ def admin_login(admin_det: getinput):
     return {"access_token":token}
 
 @app.post("/create_account")
-def define_account(token: str):
-    pass
+def define_account(payload: CreateAccountRequest):
+    token = payload.token
+    details = payload.details
+    
+    storeCustomer(details)
+    
+    return {"account_number": "ACC123456"} 
+    
