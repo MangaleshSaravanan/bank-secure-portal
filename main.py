@@ -181,7 +181,8 @@ class BankApp(CTk):
                 )
                 return
 
-        except Exception:
+        except Exception as e:
+            print(e)
             messagebox.showinfo(
                 "Connection Error",
                 "Unable to reach the server. Please check your internet connection or try again later."
@@ -208,7 +209,7 @@ class BankApp(CTk):
                 self.admpwd.delete(0, END)
                 self.destroy()
                 import admin_menu
-                app = admin_menu.adminMenu(token)
+                app = admin_menu.adminMenu(token,self.admid)
                 app.mainloop()
             else:
                 messagebox.showwarning(
@@ -217,7 +218,8 @@ class BankApp(CTk):
                 )
                 return
 
-        except Exception:
+        except Exception as e:
+            print(e)
             messagebox.showinfo(
                 "Connection Error",
                 "Unable to reach the server. Please check your internet connection or try again later."
