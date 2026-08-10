@@ -1,7 +1,11 @@
 from mysql.connector import connect
 from config import *
-
+from security import encryptPwd,retrivePwd
+from random import randint
+my_con=connect(host=HOST,user=USER,passwd=PASSWORD,port=PORT,database="__bop__")
+my_cur=my_con.cursor()
 def check_table(level,uid,upwd):
+    global my_con,my_cur
     my_con=connect(host=HOST,user=USER,passwd=PASSWORD,database="__bop__",port=PORT)
     my_cur=my_con.cursor()
     table_name = f"{level}_details"
@@ -19,153 +23,154 @@ def check_table(level,uid,upwd):
     if result:
         return True, level
     return False
-def createAccountNumber:
-    acn=None
-    return acn
+
+def createAccountNumber():
+    while True:
+        acn = str(randint(10**15, (10**16) - 1))
+        query = "SELECT 1 FROM customer_details WHERE `Account Number` = %s"
+        my_cur.execute(query, (acn,))
+        if my_cur.fetchone() is None:
+            return acn
+        
 def storeCustomer(details):
     details["DOB"]="-".join(details["DOB"].split("-")[::-1])
 
     values = list(details.values())
-    acn=createAccountNumber
+    acn=createAccountNumber()
     values.insert(0,acn)
+    values.append(encryptPwd(values[-1]))
+    values.pop(-2)
     placeholders = ", ".join(["%s"] * len(values))
     my_cur.execute(f"INSERT INTO customer_details VALUES ({placeholders})", values)
     my_con.commit()
     return acn
 
-try:
-    my_con=connect(host=HOST,user=USER,passwd=PASSWORD,port=PORT)
-    my_cur=my_con.cursor()
-    my_cur.execute("CREATE DATABASE IF NOT EXISTS __bop__")
-    my_cur.execute("USE __bop__")
-    admin_col = """
-        adminId VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin PRIMARY KEY, 
-        adminName VARCHAR(50),
-        adminPwd VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL, 
-        adminDOB DATETIME, 
-        adminDOJ DATETIME
-    """
-    my_cur.execute(
-        f"CREATE TABLE IF NOT EXISTS admin_details({admin_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-    )
+def database():
+    try:
+        my_con=connect(host=HOST,user=USER,passwd=PASSWORD,port=PORT)
+        my_cur=my_con.cursor()
+        my_cur.execute("CREATE DATABASE IF NOT EXISTS __bop__")
+        my_cur.execute("USE __bop__")
+        admin_col = """
+            adminId VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin PRIMARY KEY, 
+            adminName VARCHAR(50),
+            adminPwd VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL, 
+            adminDOB DATETIME, 
+            adminDOJ DATETIME
+        """
+        my_cur.execute(
+            f"CREATE TABLE IF NOT EXISTS admin_details({admin_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        )
 
-    cust_col = """
-        `Account Number` VARCHAR(20),
-        `First Name` VARCHAR(50),
-        `Last Name` VARCHAR(50),
-        `DOB` DATE,
-        `Gender` VARCHAR(20),
-        `e-mail` VARCHAR(100),
-        `Phone Number` VARCHAR(15),
-        `PAN Number` VARCHAR(20),
-        `Identity Type` VARCHAR(30),
-        `Identity Number` VARCHAR(50),
-        `Address Line 1` VARCHAR(100),
-        `Address Line 2` VARCHAR(100),
-        `Address Line 3` VARCHAR(100),
-        `District` VARCHAR(50),
-        `State` VARCHAR(50),
-        `Occupation` VARCHAR(50)
-    """
+        cust_col = """
+            `Account Number` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin PRIMARY KEY,
+            `First Name` VARCHAR(50) NOT NULL,
+            `Last Name` VARCHAR(50) NOT NULL,
+            `DOB` DATE,
+            `Gender` VARCHAR(20),
+            `e-mail` VARCHAR(100) UNIQUE,
+            `Phone Number` VARCHAR(15),
+            `PAN Number` VARCHAR(20) UNIQUE,
+            `Identity Type` VARCHAR(30),
+            `Identity Number` VARCHAR(50),
+            `Address Line 1` VARCHAR(100),
+            `Address Line 2` VARCHAR(100),
+            `Address Line 3` VARCHAR(100),
+            `District` VARCHAR(50),
+            `State` VARCHAR(50),
+            `Occupation` VARCHAR(50),
+            `Password` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL
+        """
 
-    my_cur.execute(
-        f"CREATE TABLE IF NOT EXISTS customer_details ({cust_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-    )
-
-    trans_col = """
-        transactionId VARCHAR(30) PRIMARY KEY, 
-        customerId VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
-        amount DECIMAL(15, 2),
-        transactionType VARCHAR(20),
-        transactionDate DATETIME
-    """
-    my_cur.execute(
-        f"CREATE TABLE IF NOT EXISTS transaction_details({trans_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-)
-except Exception as e:
-    print(e)
+        my_cur.execute(
+            f"CREATE TABLE IF NOT EXISTS customer_details ({cust_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        )        
+    except Exception as e:
+        print(e)
 
 
-bank_tables = {
-    "admins": [
-        "admin_id",
-        "username",
-        "password_hash",
-        "full_name",
-        "email",
-        "role",
-        "last_login"
-    ],
+    bank_tables = {
+        "admins": [
+            "admin_id",
+            "username",
+            "password_hash",
+            "full_name",
+            "email",
+            "role",
+            "last_login"
+        ],
 
-    "customers": [
-        "customer_id",
-        "first_name",
-        "last_name",
-        "gender",
-        "dob",
-        "phone",
-        "email",
-        "address",
-        "city",
-        "state",
-        "pincode",
-        "aadhaar_no",
-        "pan_no",
-        "occupation",
-        "created_at",
-        "status"
-    ],
+        "customers": [
+            "customer_id",
+            "first_name",
+            "last_name",
+            "gender",
+            "dob",
+            "phone",
+            "email",
+            "address",
+            "city",
+            "state",
+            "pincode",
+            "aadhaar_no",
+            "pan_no",
+            "occupation",
+            "created_at",
+            "status"
+        ],
 
-    "accounts": [
-        "account_no",
-        "customer_id",
-        "account_type",
-        "balance",
-        "branch",
-        "ifsc",
-        "opened_date",
-        "minimum_balance",
-        "status"
-    ],
+        "accounts": [
+            "account_no",
+            "customer_id",
+            "account_type",
+            "balance",
+            "branch",
+            "ifsc",
+            "opened_date",
+            "minimum_balance",
+            "status"
+        ],
 
-    "transactions": [
-        "transaction_id",
-        "account_no",
-        "transaction_type",
-        "amount",
-        "receiver_account",
-        "balance_after",
-        "description",
-        "transaction_time",
-        "admin_id"
-    ],
+        "transactions": [
+            "transaction_id",
+            "account_no",
+            "transaction_type",
+            "amount",
+            "receiver_account",
+            "balance_after",
+            "description",
+            "transaction_time",
+            "admin_id"
+        ],
 
-    "kyc": [
-        "kyc_id",
-        "customer_id",
-        "aadhaar_uploaded",
-        "pan_uploaded",
-        "address_proof",
-        "photo_uploaded",
-        "status",
-        "verified_by",
-        "verified_date"
-    ],
+        "kyc": [
+            "kyc_id",
+            "customer_id",
+            "aadhaar_uploaded",
+            "pan_uploaded",
+            "address_proof",
+            "photo_uploaded",
+            "status",
+            "verified_by",
+            "verified_date"
+        ],
 
-    "branches": [
-        "branch_id",
-        "branch_name",
-        "ifsc",
-        "city",
-        "manager"
-    ],
+        "branches": [
+            "branch_id",
+            "branch_name",
+            "ifsc",
+            "city",
+            "manager"
+        ],
 
-    "audit_logs": [
-        "log_id",
-        "admin_id",
-        "action",
-        "table_name",
-        "record_id",
-        "action_time"
-    ]
-}
+        "audit_logs": [
+            "log_id",
+            "admin_id",
+            "action",
+            "table_name",
+            "record_id",
+            "action_time"
+        ]
+    }
+if __name__=="__main__":
+    database()
