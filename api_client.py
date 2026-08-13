@@ -30,3 +30,11 @@ def create_account(token,details):
             }
         )
     return response.json().get("account_number")
+
+def search_customer(token,acn=0):
+    response = post(server+"/search_customer",
+                    json={"token":token,
+                          "acn":acn
+                          }
+                    )
+    return response.json().get("accounts")
