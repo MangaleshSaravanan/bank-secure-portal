@@ -1,5 +1,6 @@
 from customtkinter import *
-from tkinter import messagebox,  END
+from tkinter import END
+from CTkMessagebox import CTkMessagebox
 class BankApp(CTk):
     set_appearance_mode("dark")
     set_default_color_theme("blue")
@@ -155,9 +156,10 @@ class BankApp(CTk):
         usrpwd = self.custpwd.get()
 
         if not (usrid and usrpwd):
-            messagebox.showwarning(
-                "Invalid Format",
-                "Please enter Customer ID and Password."
+            CTkMessagebox(
+                title="Invalid Format",
+                message="Please enter Customer ID and Password.",
+                icon="warning"
             )
             return
 
@@ -175,27 +177,31 @@ class BankApp(CTk):
                 app = customer_menu.customerMenu()
                 app.mainloop()
             else:
-                messagebox.showwarning(
-                    "Login Failed",
-                    "The username or password you entered is incorrect."
+                CTkMessagebox(
+                    title="Login Failed",
+                    message="The username or password you entered is incorrect.",
+                    icon="cancel"
                 )
                 return
 
         except Exception as e:
             print(e)
-            messagebox.showinfo(
-                "Connection Error",
-                "Unable to reach the server. Please check your internet connection or try again later."
+            CTkMessagebox(
+                title="Connection Error",
+                message="Unable to reach the server. Please check your internet connection or try again later.",
+                icon="cancel"
             )
             return
+            
     def admin_entry(self):
         usrid = self.admid.get()
         usrpwd = self.admpwd.get()
 
         if not (usrid and usrpwd):
-            messagebox.showwarning(
-                "Invalid Format",
-                "Please enter Admin ID and Password."
+            CTkMessagebox(
+                title="Invalid Format",
+                message="Please enter Admin ID and Password.",
+                icon="warning"
             )
             return
 
@@ -212,19 +218,22 @@ class BankApp(CTk):
                 app = admin_menu.adminMenu(token,self.admid)
                 app.mainloop()
             else:
-                messagebox.showwarning(
-                    "Login Failed",
-                    "The username or password you entered is incorrect."
+                CTkMessagebox(
+                    title="Login Failed",
+                    message="The username or password you entered is incorrect.",
+                    icon="cancel"
                 )
                 return
 
         except Exception as e:
             print(e)
-            messagebox.showinfo(
-                "Connection Error",
-                "Unable to reach the server. Please check your internet connection or try again later."
+            CTkMessagebox(
+                title="Connection Error",
+                message="Unable to reach the server. Please check your internet connection or try again later.",
+                icon="cancel"
             )
             return        
+            
     def login_page(self):
         if self.admid.get(): self.admid.delete(0, END)
         if self.admpwd.get(): self.admpwd.delete(0, END)
