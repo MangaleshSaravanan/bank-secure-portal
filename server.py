@@ -12,6 +12,10 @@ class CreateAccountRequest(BaseModel):
     token: str
     details: dict
 
+class SearchAccount(BaseModel):
+    token: str
+    acn:int
+
 @app.post("/login/customer")
 def cust_login(cust_det: getinput):
     token = login("customer",cust_det.log_id,cust_det.pwd)
@@ -26,8 +30,10 @@ def admin_login(admin_det: getinput):
 def define_account(payload: CreateAccountRequest):
     token = payload.token
     details = payload.details
-    
-    storeCustomer(details)
-    
-    return {"account_number": "ACC123456"} 
-    
+    return {"account_number": storeCustomer(details)} 
+
+@app.post("/search_customer")
+def search(payload: SearchAccount):
+    token=payload.token
+    acn=payload.acn
+    return {"accounts":searchCustomer(acn)}
