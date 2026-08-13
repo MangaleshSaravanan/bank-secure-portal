@@ -2,49 +2,6 @@ from mysql.connector import connect
 from config import *
 from security import encryptPwd,retrivePwd
 from random import randint
-my_con=connect(host=HOST,user=USER,passwd=PASSWORD,port=PORT,database="__bop__")
-my_cur=my_con.cursor()
-def check_table(level,uid,upwd):
-    global my_con,my_cur
-    my_con=connect(host=HOST,user=USER,passwd=PASSWORD,database="__bop__",port=PORT)
-    my_cur=my_con.cursor()
-    table_name = f"{level}_details"
-    id_col = f"{level}Id"
-    pwd_col = f"{level}Pwd"
-    try:
-        query = f"SELECT * FROM {table_name} WHERE {id_col} = %s AND {pwd_col} = %s"
-        my_cur.execute(query, (uid, upwd))
-        result = my_cur.fetchone()
-        my_cur.close()
-        my_con.close()
-    except Exception:
-        return False
-    
-    if result:
-        return True, level
-    return False
-
-def createAccountNumber():
-    while True:
-        acn = str(randint(10**15, (10**16) - 1))
-        query = "SELECT 1 FROM customer_details WHERE `Account Number` = %s"
-        my_cur.execute(query, (acn,))
-        if my_cur.fetchone() is None:
-            return acn
-        
-def storeCustomer(details):
-    details["DOB"]="-".join(details["DOB"].split("-")[::-1])
-
-    values = list(details.values())
-    acn=createAccountNumber()
-    values.insert(0,acn)
-    values.append(encryptPwd(values[-1]))
-    values.pop(-2)
-    placeholders = ", ".join(["%s"] * len(values))
-    my_cur.execute(f"INSERT INTO customer_details VALUES ({placeholders})", values)
-    my_con.commit()
-    return acn
-
 def database():
     try:
         my_con=connect(host=HOST,user=USER,passwd=PASSWORD,port=PORT)
@@ -63,7 +20,7 @@ def database():
         )
 
         cust_col = """
-            `Account Number` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin PRIMARY KEY,
+            `Account Number` VARCHAR(20) PRIMARY KEY,
             `First Name` VARCHAR(50) NOT NULL,
             `Last Name` VARCHAR(50) NOT NULL,
             `DOB` DATE,
@@ -100,37 +57,6 @@ def database():
             "last_login"
         ],
 
-        "customers": [
-            "customer_id",
-            "first_name",
-            "last_name",
-            "gender",
-            "dob",
-            "phone",
-            "email",
-            "address",
-            "city",
-            "state",
-            "pincode",
-            "aadhaar_no",
-            "pan_no",
-            "occupation",
-            "created_at",
-            "status"
-        ],
-
-        "accounts": [
-            "account_no",
-            "customer_id",
-            "account_type",
-            "balance",
-            "branch",
-            "ifsc",
-            "opened_date",
-            "minimum_balance",
-            "status"
-        ],
-
         "transactions": [
             "transaction_id",
             "account_no",
@@ -143,26 +69,6 @@ def database():
             "admin_id"
         ],
 
-        "kyc": [
-            "kyc_id",
-            "customer_id",
-            "aadhaar_uploaded",
-            "pan_uploaded",
-            "address_proof",
-            "photo_uploaded",
-            "status",
-            "verified_by",
-            "verified_date"
-        ],
-
-        "branches": [
-            "branch_id",
-            "branch_name",
-            "ifsc",
-            "city",
-            "manager"
-        ],
-
         "audit_logs": [
             "log_id",
             "admin_id",
@@ -172,5 +78,71 @@ def database():
             "action_time"
         ]
     }
+try:
+    my_con=connect(host=HOST,user=USER,passwd=PASSWORD,port=PORT,database="__bop__")
+    my_cur=my_con.cursor()
+except Exception:
+    database()
+def check_table(level,uid,upwd):
+    global my_con,my_cur
+    my_con=connect(host=HOST,user=USER,passwd=PASSWORD,database="__bop__",port=PORT)
+    my_cur=my_con.cursor()
+    table_name = f"{level}_details"
+    id_col = f"{level}Id"
+    pwd_col = f"{level}Pwd"
+    try:
+        query = f"SELECT * FROM {table_name} WHERE {id_col} = %s AND {pwd_col} = %s"
+        my_cur.execute(query, (uid, upwd))
+        result = my_cur.fetchone()
+        my_cur.close()
+        my_con.close()
+    except Exception:
+        return False
+    
+    if result:
+        return True, level
+    return False
+
+def createAccountNumber(cursor):
+    while True:
+        acn = str(randint(10**15, (10**16) - 1))
+        query = "SELECT 1 FROM customer_details WHERE `Account Number` = %s"
+        cursor.execute(query, (acn,))
+        if cursor.fetchone() is None:
+            return acn
+            
+def storeCustomer(details):
+    details["DOB"] = "-".join(details["DOB"].split("-")[::-1])
+    values = list(details.values())
+    with connect(host=HOST, user=USER, passwd=PASSWORD, database="__bop__", port=PORT) as conn:
+        with conn.cursor() as cursor:
+            acn = createAccountNumber(cursor)
+            values.insert(0, acn)
+            values.append(encryptPwd(values[-1]))
+            values.pop(-2)
+            placeholders = ", ".join(["%s"] * len(values))
+            
+            cursor.execute(f"INSERT INTO customer_details VALUES ({placeholders})", values)
+            conn.commit()
+            return acn
+
+def searchCustomer(acn):
+    with connect(host=HOST, user=USER, passwd=PASSWORD, database="__bop__", port=PORT) as conn:
+        with conn.cursor() as cursor:
+            if acn:
+                query = f"SELECT * FROM customer_details WHERE `Account Number`=%s"%(acn,)
+            else:
+                query = f"SELECT * FROM customer_details"
+            cursor.execute(query)
+            records=cursor.fetchall()
+            ret_records=[]
+            for i in records:
+                i=i[:-1]
+                ret_records.append(i)
+            return ret_records
+                
+            
+
+    
 if __name__=="__main__":
     database()
