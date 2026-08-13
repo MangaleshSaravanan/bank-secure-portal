@@ -1,6 +1,6 @@
 from customtkinter import *
-from tkinter import messagebox
 from api_client import *
+from CTkMessagebox import CTkMessagebox
 
 class adminMenu(CTk):
     def __init__(self, token,name):
@@ -199,30 +199,84 @@ class adminMenu(CTk):
         details = {}
         for field, widget in self.entry_widgets.items():
             details[field] = widget.get().strip()
+            
         try:
-            create_account(self.token, details)
+            acn = create_account(self.token, details)
+            CTkMessagebox(
+                title="200 Success", 
+                message=f"Account Created Successfully\nAccount Number: {acn}", 
+                icon="check"
+            )
+            for widget in self.entry_widgets.values():
+                widget.delete(0, END)
+                
         except Exception:
-            messagebox.showinfo(
-                "Connection Error",
-                "Unable to reach the server. Please check your internet connection or try again later."
+            CTkMessagebox(
+                title="Connection Error",
+                message="Unable to reach the server. Please check your internet connection or try again later.",
+                icon="cancel"
             )
 
     def searchCustomer(self):
-        self.clear()
-        self.scrlFrm=CTkScrollableFrame(self.content,fg_color="grey",label_text="Customer Details",width=1000).grid(row=3, column=0, padx=20, pady=10, sticky="nsew")
-        CTkLabel(self.custFrame,
-                 text="Account Number\t:",
-                 text_color="white",
-                 font=("Helvetica",20,"bold")).grid(row=0,column=0)
-        CTkButton(self.custFrame,text=f"{chr(0x1F50E)} Search",font=("Helvetica",20,"bold")).grid(row=2,column=1,sticky="w")
-        CTkEntry(self.custFrame,
-                    placeholder_text="123456789101112",
-                 font=("Helvetica",20),
-                 height=30,
-                 width=300).grid(row=0, column=1,sticky="ew")
-        lab=list(self.fields.keys())
-        for col, head in enumerate(lab):
-            pass
+            self.clear()
+            self.scrlFrm = CTkScrollableFrame(self.content,
+                fg_color="grey",
+                label_text="Customer Details",
+                width=1000)
+            self.scrlFrm.grid(row=3, column=0, padx=20, pady=10, sticky="nsew")
+
+            CTkLabel(self.custFrame,
+                text="Account Number\t:",
+                text_color="white",
+                font=("Helvetica", 20, "bold")
+            ).grid(row=0, column=0)
+
+            CTkButton(self.custFrame,
+                text=f"{chr(0x1F50E)} Search",
+                font=("Helvetica", 20, "bold"),
+                command=self.search
+            ).grid(row=2, column=1,sticky="w")
+            
+            self.ent = CTkEntry(self.custFrame,
+                font=("Helvetica", 20),
+                height=30,
+                width=300
+            )
+            self.ent.grid(row=0, column=1, sticky="ew")
+
+    def search(self):
+        try:
+            det = search_customer(self.token, int(self.ent.get()) if self.ent.get() else 0)
+            
+            if not det:
+                CTkMessagebox(title="Not Found", message="No customer records found.", icon="cancel", option_1="OK")
+                return
+            for i in self.scrlFrm.winfo_children():
+                i.destroy()
+                
+            for index, con in enumerate(det):
+                display = " | ".join(str(val) for val in con)
+                CTkLabel(
+                    self.scrlFrm,
+                    text=display,
+                    text_color="white",
+                    font=("Helvetica", 24)
+                ).grid(row=index, column=0, padx=10, pady=5, sticky="w")
+                
+        except ValueError:
+            CTkMessagebox(
+                title="Message", 
+                message="Enter correct format", 
+                icon="warning", 
+                option_1="OK"
+            )
+            self.ent.delete(0, END)
+        except:
+            CTkMessagebox(
+                title="Connection Error",
+                message="Unable to reach the server. Please check your internet connection or try again later.",
+                icon="cancel"
+            )
 
     def accounts(self):
         pass
@@ -240,5 +294,5 @@ class adminMenu(CTk):
         pass
 
 if __name__ == "__main__":
-    app = adminMenu("1234","h")
+    app = adminMenu("1234","e")
     app.mainloop()
