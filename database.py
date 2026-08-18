@@ -36,8 +36,9 @@ def database():
             `District` VARCHAR(50),
             `State` VARCHAR(50),
             `Occupation` VARCHAR(50),
-            `Password` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL
-        """
+            `Password` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+            `Status` VARCHAR(15)
+                """
 
         my_cur.execute(
             f"CREATE TABLE IF NOT EXISTS customer_details ({cust_col}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
@@ -120,7 +121,8 @@ def storeCustomer(details):
             values.insert(0, acn)
             values.append(encryptPwd(values[-1]))
             values.pop(-2)
-            placeholders = ", ".join(["%s"] * len(values))
+            values.append("Unfreezed")
+            placeholders = ", ".join(["%s"] * len(values))+1
             
             cursor.execute(f"INSERT INTO customer_details VALUES ({placeholders})", values)
             conn.commit()
@@ -137,7 +139,8 @@ def searchCustomer(acn):
             records=cursor.fetchall()
             ret_records=[]
             for i in records:
-                i=i[:-1]
+                k="-".join(str(i[3]).split("-")[::-1])
+                i=i[:1]+(i[1]+" "+i[2],)+(k,)+i[4:-2]+i[-1:]
                 ret_records.append(i)
             return ret_records
                 
